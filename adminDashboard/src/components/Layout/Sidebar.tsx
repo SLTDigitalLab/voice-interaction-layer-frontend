@@ -1,12 +1,11 @@
 import {
   LayoutDashboard,
-  Users,
-  Phone,
+  Headphones,
+  Sliders,
   GitBranch,
   Activity,
   Settings,
 } from 'lucide-react';
-import sltLogo from '../../assets/slt-logo.svg';
 
 interface NavItem {
   id: string;
@@ -20,10 +19,10 @@ const navItems: NavItem[] = [
   {
     id: 'agents',
     label: 'Connected Agents',
-    icon: Users,
+    icon: Headphones,
     badge: { count: 142, label: 'Live' },
   },
-  { id: 'trunks', label: 'Voice Trunks & SIP', icon: Phone },
+  { id: 'trunks', label: 'Voice Trunks & SIP', icon: Sliders },
   { id: 'routing', label: 'Routing Rules', icon: GitBranch },
   { id: 'telemetry', label: 'Telemetry & Logs', icon: Activity },
   { id: 'settings', label: 'Settings', icon: Settings },
@@ -32,56 +31,99 @@ const navItems: NavItem[] = [
 interface SidebarProps {
   activeNav: string;
   onNavChange: (id: string) => void;
+  agentsCount?: number;
 }
 
-export default function Sidebar({ activeNav, onNavChange }: SidebarProps) {
+export default function Sidebar({ activeNav, onNavChange, agentsCount = 142 }: SidebarProps) {
+  const sectionLabel =
+    activeNav === 'routing' ? 'TELEPHONY CONTROL' : 'MISSION CRITICAL ROUTING';
+
   return (
     <aside className="sidebar">
       {/* Brand */}
       <div className="sidebar-brand">
-        <img src={sltLogo} alt="SLT Mobitel" className="sidebar-logo" />
+        <div className="voice-layer-brand">
+          <div className="voice-layer-title">
+            <span className="word-voice">VOICE</span>
+            <span className="word-layer">LAYER</span>
+          </div>
+          <div className="voice-layer-sub">
+            GATEWAY PORTAL
+          </div>
+        </div>
       </div>
 
-      {/* Version Badge */}
-      <div className="sidebar-version">
-        <div className="sidebar-version-badge">
-          VOICE FABRIC STACK <span>v4.8.2-r1</span>
-        </div>
+      {/* Section Header */}
+      <div className="sidebar-section-heading">
+        {sectionLabel}
       </div>
 
       {/* Navigation */}
       <nav className="sidebar-nav">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            className={`sidebar-nav-item ${activeNav === item.id ? 'active' : ''}`}
-            onClick={() => onNavChange(item.id)}
-          >
-            <item.icon size={18} />
-            {item.label}
-            {item.badge && (
-              <div className="sidebar-nav-badge">
-                <span className="count">{item.badge.count}</span>
-                <span className="label">{item.badge.label}</span>
-              </div>
-            )}
-          </button>
-        ))}
+        {navItems.map((item) => {
+          const isActive = activeNav === item.id;
+          const badgeCount = item.id === 'agents' ? agentsCount : item.badge?.count;
+          return (
+            <button
+              key={item.id}
+              className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
+              onClick={() => onNavChange(item.id)}
+            >
+              <item.icon size={18} className="sidebar-nav-icon" />
+              <span className="sidebar-nav-label">{item.label}</span>
+
+              {/* Connected Agents Badge */}
+              {item.badge && (
+                <div className="sidebar-pill-badge">
+                  <span className="badge-dot" />
+                  <span>{badgeCount} {item.badge.label}</span>
+                </div>
+              )}
+
+              {/* Blue Active Dot indicator (as seen in Telemetry & Logs screenshot) */}
+              {isActive && item.id === 'telemetry' && (
+                <div className="sidebar-active-dot" />
+              )}
+            </button>
+          );
+        })}
       </nav>
 
-      {/* Footer Stats */}
-      <div className="sidebar-footer">
-        <div className="sidebar-footer-stat">
-          <span className="stat-label">Core SIP Cluster</span>
-          <span className="stat-value">99.98% SLA</span>
-        </div>
-        <div className="sidebar-progress-bar">
-          <div className="fill" style={{ width: '99.98%' }} />
-        </div>
-        <div className="sidebar-footer-stat">
-          <span className="stat-label">Active Streams</span>
-          <span className="stat-value teal">2,418 Ch</span>
-        </div>
+      {/* Footer SLA Health Card */}
+      <div className="sidebar-footer-card">
+        {activeNav === 'telemetry' ? (
+          <>
+            <div className="sla-row">
+              <span className="sla-label">SLA Health</span>
+              <span className="sla-val-green">99.98%</span>
+            </div>
+            <div className="sla-row mt-1">
+              <span className="sla-label">Cluster</span>
+              <span className="sla-val-dark">Core SIP #01</span>
+            </div>
+            <div className="sla-progress-track">
+              <div className="sla-progress-fill" style={{ width: '99.98%' }} />
+            </div>
+            <div className="sla-row">
+              <span className="sla-label">Active Streams</span>
+              <span className="sla-val-blue">2,418 Ch</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="sla-row">
+              <span className="sla-label bold-dark">Core SIP Cluster</span>
+              <span className="sla-val-green">99.98% SLA</span>
+            </div>
+            <div className="sla-progress-track">
+              <div className="sla-progress-fill" style={{ width: '99.98%' }} />
+            </div>
+            <div className="sla-row">
+              <span className="sla-label">Active Streams</span>
+              <span className="sla-val-dark bold-dark">2,418 Ch</span>
+            </div>
+          </>
+        )}
       </div>
     </aside>
   );
